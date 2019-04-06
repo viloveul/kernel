@@ -13,7 +13,7 @@ interface Application
 
     public function serve(): void;
 
-    public function terminate(bool $exit = false, int $status = 0): void;
+    public function terminate(int $status = 0): void;
 
     public function uses(Closure $handler): void;
 }

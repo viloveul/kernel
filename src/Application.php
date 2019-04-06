@@ -119,14 +119,11 @@ abstract class Application implements IApplication
     }
 
     /**
-     * @param bool     $exit
-     * @param falseint $status
+     * @param int $status
      */
-    public function terminate(bool $exit = false, int $status = 0): void
+    public function terminate(int $status = 0): void
     {
-        if (true === $exit) {
-            exit($status);
-        }
+        exit($status);
     }
 
     /**
