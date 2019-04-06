@@ -22,7 +22,7 @@ use Viloveul\Router\Contracts\Dispatcher as IRouteDispatcher;
 use Viloveul\Config\Contracts\Configuration as IConfiguration;
 use Viloveul\Middleware\Contracts\Collection as IMiddlewareCollection;
 
-class Application implements IApplication
+abstract class Application implements IApplication
 {
     /**
      * @var mixed
