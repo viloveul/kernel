@@ -1,0 +1,35 @@
+{
+    "name": "viloveul/kernel",
+    "description": "Viloveul Application Kernel",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["zafex", "viloveul", "fajrulaz", "kernel", "component", "library"],
+    "homepage": "http://www.viloveul.com",
+    "readme": "README.MD",
+    "authors": [{
+        "name": "Fajrul Akbar Zuhdi",
+        "email": "fajrulaz@gmail.com"
+    }],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true
+    },
+    "require": {
+        "php": "~7.0",
+        "viloveul/config": "v1.*|v1.x-dev",
+        "viloveul/console": "v1.*|v1.x-dev",
+        "viloveul/http": "v1.*|v1.x-dev",
+        "viloveul/router": "v1.*|v1.x-dev",
+        "viloveul/middleware": "v1.*|v1.x-dev",
+        "viloveul/container": "v1.*|v1.x-dev"
+    },
+    "require-dev": {
+        "viloveul/support": "v1.*|v1.x-dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "Viloveul\\Kernel\\": "src/"
+        }
+    }
+}
