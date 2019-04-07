@@ -3,7 +3,7 @@
     "description": "Viloveul Application Kernel",
     "type": "library",
     "license": "MIT",
-    "keywords": ["zafex", "viloveul", "fajrulaz", "kernel", "component", "library"],
+    "keywords": ["zafex", "viloveul", "fajrulaz", "kernel", "component", "library", "foundation", "orchestrator"],
     "homepage": "http://www.viloveul.com",
     "readme": "README.MD",
     "authors": [{
@@ -19,10 +19,10 @@
         "php": "~7.0",
         "viloveul/config": "v1.*|v1.x-dev",
         "viloveul/console": "v1.*|v1.x-dev",
+        "viloveul/container": "v1.*|v1.x-dev",
         "viloveul/http": "v1.*|v1.x-dev",
-        "viloveul/router": "v1.*|v1.x-dev",
         "viloveul/middleware": "v1.*|v1.x-dev",
-        "viloveul/container": "v1.*|v1.x-dev"
+        "viloveul/router": "v1.*|v1.x-dev"
     },
     "require-dev": {
         "viloveul/support": "v1.*|v1.x-dev"
