@@ -7,6 +7,7 @@ use Exception;
 use Viloveul\Http\Response;
 use Viloveul\Console\Console;
 use Viloveul\Middleware\Stack;
+use Viloveul\Kernel\Controller;
 use Viloveul\Router\NotFoundException;
 use Viloveul\Http\Contracts\Response as IResponse;
 use Viloveul\Router\Collection as RouteCollection;
@@ -39,25 +40,21 @@ abstract class Application implements IApplication
         $this->container = $container;
 
         $this->container->set(IResponse::class, Response::class);
-
         $this->container->set(IRouteCollection::class, RouteCollection::class);
-
         $this->container->set(IMiddlewareCollection::class, MiddlewareCollection::class);
-
         $this->container->set(IConfiguration::class, function () use ($config) {
             return $config;
         });
-
         $this->container->set(IServerRequest::class, function () {
             return RequestFactory::fromGlobals();
         });
-
         $this->container->set(IRouteDispatcher::class, function (IConfiguration $config, IRouteCollection $routes) {
             $router = new RouteDispatcher($routes);
             $router->setBase($config->get('basepath') ?: '/');
             return $router;
         });
 
+        // invoke method initialize if exists
         if (method_exists($this, 'initialize')) {
             $this->initialize();
         }
@@ -68,8 +65,12 @@ abstract class Application implements IApplication
      */
     public function console(): IConsole
     {
-        $console = $this->container->make(Console::class);
-        $console->boot();
+        if ($this->container->has(IConsole::class)) {
+            $console = $this->container->get(IConsole::class);
+        } else {
+            $console = $this->container->make(Console::class);
+            $console->boot();
+        }
         return $console;
     }
 
@@ -94,15 +95,12 @@ abstract class Application implements IApplication
     {
         try {
             $request = $this->container->get(IServerRequest::class);
-            $router = $this->container->get(IRouteDispatcher::class);
-            $uri = $request->getUri();
-            $router->dispatch($request->getMethod(), $uri->getPath());
-            $route = $router->routed();
+            $this->container->get(IRouteDispatcher::class)->dispatch(
+                $request->getMethod(),
+                $request->getUri()->getPath()
+            );
             $stack = new Stack(
-                $this->makeController(
-                    $route->getHandler(),
-                    $route->getParams()
-                ),
+                $this->container->make(Controller::class),
                 $this->container->get(IMiddlewareCollection::class)
             );
             $response = $stack->handle($request);
@@ -132,46 +130,5 @@ abstract class Application implements IApplication
     public function uses(Closure $handler): void
     {
         $this->container->invoke($handler);
-    }
-
-    /**
-     * @return mixed
-     */
-    protected function makeController($handler, $params)
-    {
-        return function (IServerRequest $request) use ($handler, $params) {
-            if (is_callable($handler) && !is_scalar($handler)) {
-                if (is_array($handler) && !is_object($handler[0])) {
-                    $result = $this->container->invoke([
-                        $this->container->make($handler[0]), $handler[1],
-                    ], $params);
-                } else {
-                    $result = $this->container->invoke($handler, $params);
-                }
-            } else {
-                if (is_scalar($handler) && strpos($handler, '::') === false && is_callable($handler)) {
-                    $result = $this->container->invoke($handler, $params);
-                } else {
-                    if (is_scalar($handler)) {
-                        $parts = explode('::', $handler);
-                    } else {
-                        $parts = (array) $handler;
-                    }
-                    $class = array_shift($parts);
-                    $action = isset($parts[0]) ? $parts[0] : 'handle';
-                    $object = is_string($class) ? $this->container->make($class) : $class;
-                    $result = $this->container->invoke([$object, $action], $params);
-                }
-            }
-            if ($result instanceof IResponse) {
-                return $result;
-            } else {
-                return $this->container->get(IResponse::class)
-                    ->setStatus(IResponse::STATUS_OK)
-                    ->withPayload([
-                        'data' => $result,
-                    ]);
-            }
-        };
     }
 }
