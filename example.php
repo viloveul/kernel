@@ -26,4 +26,4 @@ $app->uses(function (Viloveul\Router\Contracts\Collection $route) {
 
 $app->serve();
 
-$app->terminate(10000);
+$app->terminate();
