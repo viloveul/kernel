@@ -65,8 +65,12 @@ abstract class Application implements IApplication
      */
     public function console(): IConsole
     {
-        $console = $this->container->make(Console::class);
-        $console->boot();
+        if ($this->container->has(IConsole::class)) {
+            $console = $this->container->get(IConsole::class);
+        } else {
+            $console = $this->container->make(Console::class);
+            $console->boot();
+        }
         return $console;
     }
 
