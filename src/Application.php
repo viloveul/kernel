@@ -93,8 +93,8 @@ abstract class Application implements IApplication
      */
     public function serve(): void
     {
+        $request = $this->container->get(IServerRequest::class);
         try {
-            $request = $this->container->get(IServerRequest::class);
             $this->container->get(IRouteDispatcher::class)->dispatch(
                 $request->getMethod(),
                 $request->getUri()->getPath()
@@ -104,10 +104,21 @@ abstract class Application implements IApplication
                 $this->container->get(IMiddlewareCollection::class)
             );
             $response = $stack->handle($request);
+
         } catch (NotFoundException $e404) {
-            $response = $this->container->get(IResponse::class)->withErrors(IResponse::STATUS_NOT_FOUND, [
-                '404 Page Not Found',
-            ]);
+            if (strtoupper($request->getMethod()) === 'OPTIONS') {
+                $response = $this->container->get(IResponse::class)
+                    ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, HEAD')
+                    ->withHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
+                    ->withHeader('Access-Control-Request-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
+                    ->withHeader('Access-Control-Request-Method', 'GET, POST, PUT, PATCH, DELETE, HEAD')
+                    ->withStatus(IResponse::STATUS_OK);
+            } else {
+                $response = $this->container->get(IResponse::class)->withErrors(IResponse::STATUS_NOT_FOUND, [
+                    '404 Page Not Found',
+                ]);
+            }
+
         } catch (Exception $e) {
             $response = $this->container->get(IResponse::class)->withErrors(IResponse::STATUS_PRECONDITION_FAILED, [
                 $e->getMessage(),
