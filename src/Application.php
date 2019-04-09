@@ -93,32 +93,43 @@ abstract class Application implements IApplication
      */
     public function serve(): void
     {
-        $request = $this->container->get(IServerRequest::class);
         try {
-            $this->container->get(IRouteDispatcher::class)->dispatch(
-                $request->getMethod(),
-                $request->getUri()->getPath()
-            );
-            $stack = new Stack(
-                $this->container->make(Controller::class),
-                $this->container->get(IMiddlewareCollection::class)
-            );
-            $response = $stack->handle($request);
+            $request = $this->container->get(IServerRequest::class);
+            $router = $this->container->get(IRouteDispatcher::class);
+            $uri = $request->getUri();
 
-        } catch (NotFoundException $e404) {
-            if (strtoupper($request->getMethod()) === 'OPTIONS') {
-                $response = $this->container->get(IResponse::class)
-                    ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, HEAD')
-                    ->withHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
-                    ->withHeader('Access-Control-Request-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
-                    ->withHeader('Access-Control-Request-Method', 'GET, POST, PUT, PATCH, DELETE, HEAD')
-                    ->withStatus(IResponse::STATUS_OK);
+            $accessMethods = $request->getHeader('Access-Control-Request-Method');
+            $accessHeaders = $request->getHeader('Access-Control-Request-Headers');
+            if (strtoupper($request->getMethod()) === 'OPTIONS' && count($accessMethods) > 0) {
+                $cors = false;
+                foreach ($accessMethods as $accessMethod) {
+                    if ($router->dispatch($accessMethod, $uri->getPath(), false) === true) {
+                        $cors = true;
+                        $response = $this->container->get(IResponse::class)
+                            ->withHeader('Access-Control-Allow-Methods', $accessMethod)
+                            ->withHeader('Access-Control-Allow-Headers', implode(', ', $accessHeaders))
+                            ->withStatus(IResponse::STATUS_OK);
+                    }
+                }
+                if ($cors === false) {
+                    $response = $this->container->get(IResponse::class)->withStatus(IResponse::STATUS_METHOD_NOT_ALLOWED);
+                }
             } else {
-                $response = $this->container->get(IResponse::class)->withErrors(IResponse::STATUS_NOT_FOUND, [
-                    '404 Page Not Found',
-                ]);
+                $router->dispatch(
+                    $request->getMethod(),
+                    $uri->getPath()
+                );
+                $stack = new Stack(
+                    $this->container->make(Controller::class),
+                    $this->container->get(IMiddlewareCollection::class)
+                );
+                $response = $stack->handle($request);
             }
 
+        } catch (NotFoundException $e404) {
+            $response = $this->container->get(IResponse::class)->withErrors(IResponse::STATUS_NOT_FOUND, [
+                '404 Page Not Found',
+            ]);
         } catch (Exception $e) {
             $response = $this->container->get(IResponse::class)->withErrors(IResponse::STATUS_PRECONDITION_FAILED, [
                 $e->getMessage(),
