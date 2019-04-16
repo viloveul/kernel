@@ -93,17 +93,28 @@ abstract class Application implements IApplication
      */
     public function serve(): void
     {
+        $this->container->get(IMiddlewareCollection::class)->map(function ($middleware) {
+            if (is_string($middleware)) {
+                if ($this->container->has($middleware)) {
+                    return $this->container->get($middleware);
+                } else {
+                    return $this->container->make($middleware);
+                }
+            } else {
+                return $middleware;
+            }
+        });
+
         try {
             $request = $this->container->get(IServerRequest::class);
             $router = $this->container->get(IRouteDispatcher::class);
-            $uri = $request->getUri();
 
             $accessMethods = $request->getHeader('Access-Control-Request-Method');
             $accessHeaders = $request->getHeader('Access-Control-Request-Headers');
             if (strtoupper($request->getMethod()) === 'OPTIONS' && count($accessMethods) > 0) {
                 $cors = false;
                 foreach ($accessMethods as $accessMethod) {
-                    if ($router->dispatch($accessMethod, $uri->getPath(), false) === true) {
+                    if ($router->dispatch($accessMethod, $request->getUri(), false) === true) {
                         $cors = true;
                         $response = $this->container->get(IResponse::class)
                             ->withHeader('Access-Control-Allow-Methods', $accessMethod)
@@ -117,7 +128,7 @@ abstract class Application implements IApplication
             } else {
                 $router->dispatch(
                     $request->getMethod(),
-                    $uri->getPath()
+                    $request->getUri()
                 );
                 $stack = new Stack(
                     $this->container->make(Controller::class),

@@ -49,6 +49,9 @@ class Controller implements IContainerAware
      */
     public function process(IServerRequest $request)
     {
+        $this->getContainer()->remap(IServerRequest::class, function () use ($request) {
+            return $request;
+        });
         $handler = $this->route->getHandler();
         $params = $this->route->getParams();
 
