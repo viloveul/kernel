@@ -119,7 +119,7 @@ abstract class Application implements IApplication
                         $response = $this->container->get(IResponse::class)
                             ->withHeader('Access-Control-Allow-Methods', $accessMethod)
                             ->withHeader('Access-Control-Allow-Headers', implode(', ', $accessHeaders))
-                            ->withStatus(IResponse::STATUS_OK);
+                            ->withStatus(IResponse::STATUS_NO_CONTENT);
                     }
                 }
                 if ($cors === false) {
