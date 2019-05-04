@@ -8,6 +8,7 @@ use Viloveul\Http\Response;
 use Viloveul\Console\Console;
 use Viloveul\Middleware\Stack;
 use Viloveul\Kernel\Controller;
+use Viloveul\Log\Contracts\Logger;
 use Viloveul\Router\NotFoundException;
 use Viloveul\Http\Contracts\Response as IResponse;
 use Viloveul\Router\Collection as RouteCollection;
@@ -61,14 +62,6 @@ abstract class Application implements IApplication
     }
 
     /**
-     * @param Throwable $e
-     */
-    public function catchThrowable(Throwable $e): void
-    {
-        // do nothing
-    }
-
-    /**
      * @return mixed
      */
     public function console(): IConsole
@@ -101,19 +94,19 @@ abstract class Application implements IApplication
      */
     public function serve(): void
     {
-        $this->container->get(IMiddlewareCollection::class)->map(function ($middleware) {
-            if (is_string($middleware)) {
-                if ($this->container->has($middleware)) {
-                    return $this->container->get($middleware);
-                } else {
-                    return $this->container->make($middleware);
-                }
-            } else {
-                return $middleware;
-            }
-        });
-
         try {
+            $this->container->get(IMiddlewareCollection::class)->map(function ($middleware) {
+                if (is_string($middleware)) {
+                    if ($this->container->has($middleware)) {
+                        return $this->container->get($middleware);
+                    } else {
+                        return $this->container->make($middleware);
+                    }
+                } else {
+                    return $middleware;
+                }
+            });
+
             $request = $this->container->get(IServerRequest::class);
             $router = $this->container->get(IRouteDispatcher::class);
 
@@ -158,7 +151,9 @@ abstract class Application implements IApplication
                 $status = IResponse::STATUS_PRECONDITION_FAILED;
                 $message = $e->getMessage();
             }
-            $this->catchThrowable($e);
+            if ($this->container->has(Logger::class)) {
+                $this->container->get(Logger::class)->handleException($e);
+            }
             $response = $this->container->get(IResponse::class)->withErrors($status, [$message]);
         }
         $response->send();

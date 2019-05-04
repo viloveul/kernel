@@ -27,6 +27,9 @@
     "require-dev": {
         "viloveul/support": "v1.*|v1.x-dev"
     },
+    "suggest": {
+        "viloveul/log": "For handling throwable on serve"
+    },
     "autoload": {
         "psr-4": {
             "Viloveul\\Kernel\\": "src/"
