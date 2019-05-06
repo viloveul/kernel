@@ -2,6 +2,7 @@
 
 namespace Viloveul\Kernel;
 
+use Closure;
 use Viloveul\Container\ContainerAwareTrait;
 use Viloveul\Router\Contracts\Route as IRoute;
 use Viloveul\Http\Contracts\Response as IResponse;
@@ -55,8 +56,8 @@ class Controller implements IContainerAware
         $handler = $this->route->getHandler();
         $params = $this->route->getParams();
 
-        if (is_callable($handler) && !is_scalar($handler)) {
-            $result = $this->useCallback($handler, $params);
+        if ($handler instanceof Closure) {
+            $result = $this->getContainer()->invoke($handler, $params);
         } else {
             $result = $this->makeCallback($handler, $params);
         }
@@ -88,22 +89,6 @@ class Controller implements IContainerAware
             $action = isset($parts[0]) ? $parts[0] : 'handle';
             $object = is_string($class) ? $this->getContainer()->make($class) : $class;
             $result = $this->getContainer()->invoke([$object, $action], $params);
-        }
-        return $result;
-    }
-
-    /**
-     * @param  $handler
-     * @param  array      $params
-     * @return mixed
-     */
-    protected function useCallback(callable $handler, array $params)
-    {
-        if (is_array($handler) && !is_object($handler[0])) {
-            $object = $this->getContainer()->make($handler[0]);
-            $result = $this->getContainer()->invoke([$object, $handler[1]], $params);
-        } else {
-            $result = $this->getContainer()->invoke($handler, $params);
         }
         return $result;
     }
