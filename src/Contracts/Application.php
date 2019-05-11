@@ -9,6 +9,8 @@ interface Application
 {
     public function console(): Console;
 
+    public function lastInfo(): array;
+
     public function middleware($middleware): void;
 
     public function serve(): void;

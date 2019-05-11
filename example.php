@@ -35,8 +35,7 @@ $app->middleware(Abc::class);
 
 $app->uses(function (Viloveul\Router\Contracts\Collection $router) {
     $router->add(
-        new Viloveul\Router\Route('GET /', function (Viloveul\Http\Contracts\ServerRequest $request) {
-            return $request->getUri()->getPath();
+        new Viloveul\Router\Route('POST /', function (Viloveul\Http\Contracts\ServerRequest $request) {
         })
     )->setName('dor');
 });

@@ -29,7 +29,7 @@ abstract class Application implements IApplication
     /**
      * @var mixed
      */
-    protected $container = null;
+    private $container = null;
 
     /**
      * @param  IContainer     $container
@@ -73,6 +73,16 @@ abstract class Application implements IApplication
             $console->boot();
         }
         return $console;
+    }
+
+    public function lastInfo(): array
+    {
+        $time = 0;
+        if (defined('VILOVEUL_START')) {
+            $time = (microtime(true) - VILOVEUL_START);
+        }
+        $memory = memory_get_usage();
+        return compact('time', 'memory');
     }
 
     /**
