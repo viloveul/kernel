@@ -34,5 +34,10 @@
         "psr-4": {
             "Viloveul\\Kernel\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ViloveulKernelSample\\": "sample/"
+        }
     }
 }

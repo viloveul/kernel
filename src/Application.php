@@ -6,8 +6,8 @@ use Closure;
 use Throwable;
 use Viloveul\Http\Response;
 use Viloveul\Console\Console;
+use Viloveul\Kernel\Resolver;
 use Viloveul\Middleware\Stack;
-use Viloveul\Kernel\Controller;
 use Viloveul\Log\Contracts\Logger;
 use Viloveul\Router\NotFoundException;
 use Viloveul\Http\Contracts\Response as IResponse;
@@ -32,12 +32,18 @@ abstract class Application implements IApplication
     private $container = null;
 
     /**
+     * @var mixed
+     */
+    private $start;
+
+    /**
      * @param  IContainer     $container
      * @param  IConfiguration $config
      * @return mixed
      */
     public function __construct(IContainer $container, IConfiguration $config)
     {
+        $this->start = defined('VILOVEUL_START') ? VILOVEUL_START : microtime(true);
         $this->container = $container;
 
         $this->container->set(IResponse::class, Response::class);
@@ -77,12 +83,9 @@ abstract class Application implements IApplication
 
     public function lastInfo(): array
     {
-        $time = 0;
-        if (defined('VILOVEUL_START')) {
-            $time = (microtime(true) - VILOVEUL_START);
-        }
-        $memory = memory_get_usage();
-        return compact('time', 'memory');
+        $elapsed_time = (microtime(true) - $this->start);
+        $memory_usage = memory_get_usage();
+        return compact('elapsed_time', 'memory_usage');
     }
 
     /**
@@ -120,34 +123,33 @@ abstract class Application implements IApplication
             $request = $this->container->get(IServerRequest::class);
             $router = $this->container->get(IRouteDispatcher::class);
 
+            $method = $request->getMethod();
+            $uri = $request->getUri();
+
             $accessMethods = $request->getHeader('Access-Control-Request-Method');
             $accessHeaders = $request->getHeader('Access-Control-Request-Headers');
-            if (strtoupper($request->getMethod()) === 'OPTIONS' && count($accessMethods) > 0) {
+
+            if (strtoupper($method) === 'OPTIONS' && count($accessMethods) > 0) {
                 $cors = false;
                 foreach ($accessMethods as $accessMethod) {
-                    if ($router->dispatch($accessMethod, $request->getUri(), false) === true) {
-                        $cors = true;
+                    if ($router->dispatch($accessMethod, $uri, false) === true) {
                         $response = $this->container->get(IResponse::class)
                             ->withHeader('Access-Control-Allow-Methods', $accessMethod)
                             ->withHeader('Access-Control-Allow-Headers', implode(', ', $accessHeaders))
                             ->withStatus(IResponse::STATUS_NO_CONTENT);
+                        $cors = true;
+                        break;
                     }
                 }
                 if ($cors === false) {
                     $response = $this->container->get(IResponse::class)->withErrors(IResponse::STATUS_METHOD_NOT_ALLOWED, [
-                        vsprintf('%s method to target %s is not allowed.', [
-                            $request->getMethod(),
-                            $request->getUri()->getPath(),
-                        ]),
+                        sprintf('%s method to target %s is not allowed.', $method, $uri->getPath()),
                     ]);
                 }
             } else {
-                $router->dispatch(
-                    $request->getMethod(),
-                    $request->getUri()
-                );
+                $router->dispatch($method, $uri);
                 $stack = new Stack(
-                    $this->container->make(Controller::class),
+                    $this->container->make(Resolver::class),
                     $this->container->get(IMiddlewareCollection::class)
                 );
                 $response = $stack->handle($request);
