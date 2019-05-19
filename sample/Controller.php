@@ -2,9 +2,7 @@
 
 namespace ViloveulKernelSample;
 
-use Viloveul\Kernel\Controller;
-
-class MyController extends Controller
+class Controller
 {
     public function index()
     {
