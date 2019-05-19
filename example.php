@@ -6,7 +6,7 @@ $app = new ViloveulKernelSample\Application();
 
 $app->uses(function (Viloveul\Router\Contracts\Collection $router) {
     $router->add(
-        new Viloveul\Router\Route('GET /', [ViloveulKernelSample\MyController::class, 'index'])
+        new Viloveul\Router\Route('GET /', [ViloveulKernelSample\Controller::class, 'index'])
     );
 });
 

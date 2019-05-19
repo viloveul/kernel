@@ -9,13 +9,20 @@ interface Application
 {
     public function console(): Console;
 
-    public function lastInfo(): array;
-
+    /**
+     * @param $middleware
+     */
     public function middleware($middleware): void;
 
     public function serve(): void;
 
-    public function terminate(int $status = 0): void;
+    /**
+     * @param int $status
+     */
+    public function terminate(int $status): void;
 
+    /**
+     * @param Closure $handler
+     */
     public function uses(Closure $handler): void;
 }
