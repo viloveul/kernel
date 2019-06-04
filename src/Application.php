@@ -34,11 +34,6 @@ abstract class Application implements IApplication
     private $container = null;
 
     /**
-     * @var mixed
-     */
-    private $start;
-
-    /**
      * @param  IContainer     $container
      * @param  IConfiguration $config
      * @return mixed
@@ -158,7 +153,7 @@ abstract class Application implements IApplication
                 $status = IResponse::STATUS_NOT_FOUND;
                 $message = '404 Page Not Found';
             } else {
-                $status = IResponse::STATUS_PRECONDITION_FAILED;
+                $status = IResponse::STATUS_BAD_GATEWAY;
                 $message = $e->getMessage();
             }
             if ($this->container->has(Logger::class)) {
