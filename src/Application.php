@@ -57,7 +57,7 @@ abstract class Application implements IApplication
         });
         $this->container->set(IRouteDispatcher::class, function (IConfiguration $config, IRouteCollection $routes) {
             $router = new RouteDispatcher($routes);
-            $router->setBase($config->get('basepath') ?: '/');
+            $router->setBase($config->get('baseurl') ?: '/');
             return $router;
         });
 
